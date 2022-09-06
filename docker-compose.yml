@@ -1,0 +1,51 @@
+version: "3.9"
+services:
+  client:
+    build: 
+      dockerfile: Dockerfile
+      context: ./react-app
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+       - bridge
+  libcamera:
+    build:
+      dockerfile: Dockerfile
+      context: ./libcamera
+    restart: always
+    ports:
+      - "8080:8080"
+    networks:
+       - bridge
+    volumes:
+      - /opt/vc:/opt/vc
+      - /opt/vc/lib:/opt/vc/lib
+      - /run/udev:/run/udev:ro
+    environment:
+      LD_LIBRARY_PATH: /opt/vc/lib
+    devices:
+      - "/dev/vchiq:/dev/vchiq"
+      - "/dev/vcsm:/dev/vcsm"
+      - "/dev:/dev"
+      - "/dev/media0:/dev/media0"
+      - "/dev/media1:/dev/media1"
+      - "/dev/media2:/dev/media2"
+      - "/dev/media3:/dev/media3"
+      - "/dev/media4:/dev/media4"
+    privileged: true
+  server:
+    build: 
+      dockerfile: Dockerfile
+      context: ./server
+    restart: always
+    environment:
+      - LIBCAMERA=raspberrypicamera-libcamera-1
+    depends_on:
+      - libcamera
+    ports:
+      - "3000:3000"
+    networks:
+       - bridge
+networks:
+  bridge:
